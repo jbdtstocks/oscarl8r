@@ -76,3 +76,5 @@ def FullAnalysis(span=4):
 		df[['%K', '%D', 'close', 'RSI', '30%', '70%']].plot()
 		plt.title(ticker)
 		plt.show()
+
+FullAnalysis()
