@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 # matplotlib.use('TkAgg')
 # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import fbprophet
+from fbprophet import Prophet
 import sklearn as sk
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import *

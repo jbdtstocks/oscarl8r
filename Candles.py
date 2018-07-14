@@ -1,5 +1,6 @@
 from imports import *
 
+ticker = 'AAPL'
 
 def MarketData(ticker):
 	df = pdr.DataReader(ticker, 'iex', start='1/1/2018')
@@ -40,6 +41,24 @@ def RelativeStrengthIndex(ticker):
 def StockStatistics(ticker):
 	pass
 
+def Forecast(ticker):
+	df = pdr.DataReader(ticker, 'iex', start='1/1/2018')
+	new = pd.DataFrame()
+	new = new.append(df['close'])
+	new = new.T
+	new['ds'] = new.index
+	new['y'] = new['close']
+	cols = new.columns.tolist()
+	cols.remove('close')
+	new = new[cols]
+	m = Prophet()
+	m.fit(new)
+	future = m.make_future_dataframe(periods=180)
+	forecast = m.predict(future)
+	m.plot(forecast)
+	m.plot_components(forecast)
+	plt.show()
+
 def FullAnalysis(span=4):
 	path = "C:/Users/david/oscarl8r/workingtickers.xlsx"
 	tickers = pd.read_excel(path)
@@ -70,4 +89,5 @@ def FullAnalysis(span=4):
 		plt.title(ticker)
 		plt.show()
 
-FullAnalysis()
+# FullAnalysis()
+Forecast('AAPL')
