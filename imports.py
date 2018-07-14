@@ -8,10 +8,11 @@ from pandas import ExcelWriter
 import pandas_datareader as pdr
 from openpyxl import load_workbook
 import numpy as np
-import matplotlib
-matplotlib.use('TkAgg')
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
+# matplotlib.use('TkAgg')
+# from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+import fbprophet
 import sklearn as sk
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import *
