@@ -86,10 +86,12 @@ def Forecast(ticker, type = 'market', api='iex', start='1/1/2018', end=None):
 		print(rsi)
 	if type == 'Stochastic':
 		pass
-	m = Prophet(changepoint_prior_scale=1.2)
+	m = Prophet(changepoint_prior_scale=.1999)
 	m.fit(new)
-	future = m.make_future_dataframe(periods=180)
+	future = m.make_future_dataframe(periods=7)
 	forecast = m.predict(future)
+	print("Yesterday's closing price:", df[close][-1])
+	print("Prediction:", '\n', forecast[['ds', 'trend','yhat_lower', 'yhat_upper']])
 	m.plot(forecast)
 	plt.title(ticker)
 	plt.show()
@@ -153,8 +155,21 @@ def FilterByPrice(api='robinhood', start='1/1/2018'):
 	filter_df = pd.DataFrame({'Filter Price': filter_list})
 	filter_df.to_csv('price_filtered_tickers.csv')
 
+def FilterOptions():
+	tickers = pd.read_excel('workingtickers.xlsx')
+	options = pd.read_excel('options.xlsx')
+	ticker_list = tickers['TICKER'].tolist()
+	option_list = options['Option'].tolist()
+	option_filter_list = []
+	for tick in ticker_list:
+		if tick in option_list:
+			option_filter_list.append(tick)
+	filter_option = pd.DataFrame({'Options': option_filter_list})
+	filter_option.to_excel('option_filtered.xlsx')
+
 # MarketData('AAPL')
 # FullAnalysis('AAPL')
 # Forecast('AAPL')
 # print(RelativeStrengthIndex('AAPL'))
-FilterByPrice()
+# FilterByPrice()
+FilterOptions()
