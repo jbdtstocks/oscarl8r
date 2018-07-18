@@ -47,7 +47,7 @@ def RelativeStrengthIndex(ticker, span=4):
 def StockStatistics(ticker):
 	pass
 
-def Forecast(ticker, type = 'market', api='iex', start='1/1/2018', end=None):
+def Forecast(ticker, type = 'market', api='iex', start='1/1/2015', end=None):
 	df = pdr.DataReader(ticker, api, start, end)
 	new = pd.DataFrame()
 	if api == 'quandl':
@@ -92,9 +92,13 @@ def Forecast(ticker, type = 'market', api='iex', start='1/1/2018', end=None):
 	forecast = m.predict(future)
 	print("Yesterday's closing price:", df[close][-1])
 	print("Prediction:", '\n', forecast[['ds', 'trend','yhat_lower', 'yhat_upper']])
+	forecast['avg'] = (forecast['yhat_upper'] +forecast['yhat_lower']) / 2
+	avg = forecast[['ds', 'avg']]
+	print(avg)
+	forecast.to_excel(ticker + '__' + '7DayForecast.xlsx')
 	m.plot(forecast)
 	plt.title(ticker)
-	plt.show()
+	plt.show(block=False)
 	# m.plot_components(forecast)
 
 def FullAnalysis(ticker, api='iex', span=4):
@@ -155,6 +159,10 @@ def FilterByPrice(api='robinhood', start='1/1/2018'):
 	filter_df = pd.DataFrame({'Filter Price': filter_list})
 	filter_df.to_csv('price_filtered_tickers.csv')
 
+def OptionsProfitCalculator(exp_price, strike_price, option_price):
+	profit = (((exp_price - strike_price)*100) / (option_price*100))
+	print(profit)
+
 def FilterOptions():
 	tickers = pd.read_excel('workingtickers.xlsx')
 	options = pd.read_excel('options.xlsx')
@@ -169,7 +177,8 @@ def FilterOptions():
 
 # MarketData('AAPL')
 # FullAnalysis('AAPL')
-# Forecast('AAPL')
+# Forecast('ZNGA')
+OptionsProfitCalculator(4.36, 4,.1)
 # print(RelativeStrengthIndex('AAPL'))
 # FilterByPrice()
-FilterOptions()
+# FilterOptions()
