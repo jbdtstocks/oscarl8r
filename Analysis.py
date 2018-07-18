@@ -140,45 +140,7 @@ def FullAnalysis(ticker, api='iex', span=4):
 		plt.title(ticker)
 		plt.show()
 
-def FilterByPrice(api='robinhood', start='1/1/2018'):
-	path = "C:/Users/david/oscarl8r/workingtickers.xlsx"
-	tickers = pd.read_excel(path)
-	tickers = tickers['TICKER'].tolist()
-	filter_list = []
-	for ticker in tickers:
-		try:
-			df = pdr.DataReader(ticker, api, start)
-			print("Loaded:", ticker)
-			price = df['close_price'].iloc[-1]
-			print(float(price))
-			if float(price) <= 60 and float(price) > 2:
-				filter_list.append(ticker)
-		except:
-			print("Failed:",ticker, price)
-			pass
-	filter_df = pd.DataFrame({'Filter Price': filter_list})
-	filter_df.to_csv('price_filtered_tickers.csv')
-
-def OptionsProfitCalculator(exp_price, strike_price, option_price):
-	profit = (((exp_price - strike_price)*100) / (option_price*100))
-	print(profit)
-
-def FilterOptions():
-	tickers = pd.read_excel('workingtickers.xlsx')
-	options = pd.read_excel('options.xlsx')
-	ticker_list = tickers['TICKER'].tolist()
-	option_list = options['Option'].tolist()
-	option_filter_list = []
-	for tick in ticker_list:
-		if tick in option_list:
-			option_filter_list.append(tick)
-	filter_option = pd.DataFrame({'Options': option_filter_list})
-	filter_option.to_excel('option_filtered.xlsx')
-
 # MarketData('AAPL')
 # FullAnalysis('AAPL')
 # Forecast('ZNGA')
-OptionsProfitCalculator(4.36, 4,.1)
 # print(RelativeStrengthIndex('AAPL'))
-# FilterByPrice()
-# FilterOptions()
