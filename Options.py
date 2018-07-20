@@ -1,6 +1,6 @@
 from imports import *
 
-def Forecast(ticker, type = 'market', api='iex', start='1/1/2015', end=None):
+def Forecast(ticker, type = 'market', api='iex', start='1/1/2017', end=None):
 	"""
 	-------------
 	Function that forecasts the price of a stock over a period of time.
@@ -40,22 +40,6 @@ def Forecast(ticker, type = 'market', api='iex', start='1/1/2015', end=None):
 		cols = new.columns.tolist()
 		cols.remove(close)
 		new = new[cols]
-	if type == 'RSI':
-		rsi = RelativeStrengthIndex(ticker)
-		rsi.columns = ['RSI']
-		if isinstance(rsi, pd.DataFrame):
-			print(rsi)
-		new = new.append(rsi)
-		print(new)
-		new['ds'] = new.index
-		new['y'] = new['RSI']
-		cols = new.columns.tolist()
-		print(cols)
-		cols.remove('RSI')
-		new = new[cols]
-		print(rsi)
-	if type == 'Stochastic':
-		pass
 	m = Prophet(changepoint_prior_scale=.1999)
 	m.fit(new)
 	future = m.make_future_dataframe(periods=7)
@@ -65,7 +49,7 @@ def Forecast(ticker, type = 'market', api='iex', start='1/1/2015', end=None):
 	forecast['avg'] = (forecast['yhat_upper'] +forecast['yhat_lower']) / 2
 	avg = forecast[['ds', 'avg']]
 	print(avg)
-	forecast.to_excel(ticker + '__' + '7DayForecast.xlsx')
+	# forecast.to_excel(ticker + '__' + '7DayForecast.xlsx')
 	m.plot(forecast)
 	plt.title(ticker)
 	plt.show(block=False)
@@ -90,5 +74,5 @@ def OptionsProfitCalculator(exp_price, strike_price, option_price):
 	print("Net options profit:", '$' + profit)
 	return profit
 
-Forecast()
-OptionsProfitCalculator()
+Forecast('ARNC')
+# OptionsProfitCalculator()
