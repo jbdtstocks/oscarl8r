@@ -3,6 +3,11 @@ import time
 from time import sleep
 import datetime as dt
 import glob as gl
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 import csv
 import pandas as pd
 from pandas import ExcelWriter
@@ -14,6 +19,10 @@ import matplotlib.pyplot as plt
 # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.dates import (MONTHLY, DateFormatter, rrulewrapper, RRuleLocator, YearLocator, MonthLocator, DayLocator)
+import plotly
+plotly.tools.set_credentials_file(username='jbdtstocks', api_key='cCqpKMsmASdpYw5a5Hgc')
+import plotly.plotly as py
+import plotly.graph_objs as go
 from fbprophet import Prophet
 import sklearn as sk
 import warnings

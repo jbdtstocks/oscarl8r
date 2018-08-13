@@ -142,8 +142,7 @@ def FullAnalysis(ticker, api='iex', span=4):
 	RSI = df['RSI'].values
 	thirty = df['30%'].values
 	seventy = df['70%'].values
-	x_ = df.index.astype(str)
-	print(x_)
+	x_ = df.index.tolist()
 
 	plt.plot(x_, K, label='%K')
 	plt.plot(x_, D, label='%D')
@@ -156,12 +155,131 @@ def FullAnalysis(ticker, api='iex', span=4):
 	ax.xaxis.set_major_locator(months)
 	ax.xaxis.set_major_formatter(mnthsformatter)
 	ax.xaxis.set_minor_locator(days)
+	ax.axes.set_xticklabels(x_)
 	fig.autofmt_xdate()
 	plt.title(ticker)
 	ax.axes.set_ylim(bottom=0)
 	plt.show()
+
+def average_directional_movement_index(df, n, n_ADX):
+	"""
+	Calculate the Average Directional Movement Index for given data.
+	:param df: pandas.DataFrame
+	:param n:
+	:param n_ADX:
+	:return: pandas.DataFrame
+	"""
+	n = 14
+	n_ADX = 14
+	i = 0
+	UpI = []
+	DoI = []
+	while i + 1 <= df.index[-1]:
+		UpMove = df.loc[i + 1, 'High'] - df.loc[i, 'High']
+		DoMove = df.loc[i, 'Low'] - df.loc[i + 1, 'Low']
+		if UpMove > DoMove and UpMove > 0:
+			UpD = UpMove
+		else:
+			UpD = 0
+		UpI.append(UpD)
+		if DoMove > UpMove and DoMove > 0:
+			DoD = DoMove
+		else:
+			DoD = 0
+		DoI.append(DoD)
+		i = i + 1
+	i = 0
+	TR_l = [0]
+	while i < df.index[-1]:
+		TR = max(df.loc[i + 1, 'High'], df.loc[i, 'Close']) - min(df.loc[i + 1, 'Low'], df.loc[i, 'Close'])
+		TR_l.append(TR)
+		i = i + 1
+	TR_s = pd.Series(TR_l)
+	ATR = pd.Series(TR_s.ewm(span=n, min_periods=n).mean())
+	UpI = pd.Series(UpI)
+	DoI = pd.Series(DoI)
+	PosDI = pd.Series(UpI.ewm(span=n, min_periods=n).mean() / ATR)
+	NegDI = pd.Series(DoI.ewm(span=n, min_periods=n).mean() / ATR)
+	ADX = pd.Series((abs(PosDI - NegDI) / (PosDI + NegDI)).ewm(span=n_ADX, min_periods=n_ADX).mean(),
+			name='ADX_' + str(n) + '_' + str(n_ADX))
+	df = df.join(ADX)
+	return df
+
+def Screener():
+	xl = pd.read_excel('top_100_stocks.xlsx')
+	tickers = xl['TICKER'].tolist()
+	tickers = sorted(tickers)
+	for ticker in tickers:
+		try:
+			df = pdr.DataReader(ticker, 'iex', start='1/1/2015')
+			df['SMA14'] = df['close'].rolling(window=14).mean()
+			df['SMA28'] = df['close'].rolling(window=28).mean()
+			df['SMA100'] = df['close'].rolling(window=100).mean()
+			df['EMA 14'] = df['close'].ewm(span=20, adjust=False).mean()
+			df['EMA 28'] = df['close'].ewm(span=50, adjust=False).mean()
+			df['MACD'] = df['close'].ewm(span=12, adjust=False).mean() - df['close'].ewm(span=26, adjust=False).mean()
+			df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+			df = df.dropna()
+			sma14 = df['SMA14'].tolist()
+			sma28 = df['SMA28'].tolist()
+			ema14 = df['EMA 14'].tolist()
+			ema28 = df['EMA 28'].tolist()
+			macd = df['MACD'].tolist()
+			signal = df['Signal'].tolist()
+			close = df['close'].tolist()
+			buy_sell = []
+			buy_sell2 = []
+			up_down = []
+			for i,j in zip(close,sma14):
+				if i > j and j:
+					buy_sell.append('buy')
+				if j > i and j:
+					buy_sell.append('sell')
+			for i,j in zip(sma14, sma28):
+				if i > j:
+					buy_sell2.append('buy')
+				else:
+					buy_sell2.append('sell')
+			for i,j in zip(macd, signal):
+				if i > j:
+					up_down.append('UP')
+				if j > i:
+					up_down.append("DOWN")
+			df['Buy/Sell'] = buy_sell
+			df['SMA Buy/Sell'] = buy_sell2
+			df["UP/DOWN"] = up_down
+			if buy_sell2[-1] == 'buy' and up_down[-1] == 'UP':
+				print(ticker, df['close'].iloc[-1], 'CALL')
+			if buy_sell2[-1] == 'sell' and up_down[-1] == 'DOWN':
+				print(ticker, df['close'].iloc[-1], 'PUT')
+			# print(ticker,df.tail())
+		except:
+			pass
+	# # df.to_excel('StrongTrendList.xlsx')
+	# fromaddr = "jbdtstocks@gmail.com"
+	# toaddr = "jbdtstocks@gmail.com"
+	# msg = MIMEMultipart()
+	# msg['From'] = fromaddr
+	# msg['To'] = toaddr
+	# msg['Subject'] = "Stock Screener"
+	# body = "Daily stock screen"
+	# msg.attach(MIMEText(body, 'plain'))
+	# filename = "StrongTrendList.xlsx"
+	# attachment = open("StrongTrendList.xlsx", "rb")
+	# p = MIMEBase('application', 'octet-stream')
+	# p.set_payload((attachment).read())
+	# encoders.encode_base64(p)
+	# p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+	# msg.attach(p)
+	# s = smtplib.SMTP('smtp.gmail.com', 587)
+	# s.starttls()
+	# s.login(fromaddr, "Stocker#1")
+	# text = msg.as_string()
+	# s.sendmail(fromaddr, toaddr, text)
+	# s.quit()
 #########################################################################
-# StochasticOscillator('ARNC')
-FullAnalysis('ARNC')
+# StochasticOscillator('LB')
+# FullAnalysis('LMT')
 # Forecast()
 # print(RelativeStrengthIndex('AAPL'))
+Screener()
