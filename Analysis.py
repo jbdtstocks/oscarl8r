@@ -1,13 +1,5 @@
 from imports import *
 
-def MarketData(ticker):
-	df = pdr.DataReader(ticker, 'iex', start='1/1/2018')
-	price = df['close'].iloc[-1]
-	print("Average closing price:", df['close'].mean())
-	df['close'].plot()
-	plt.title(ticker)
-	plt.show()
-
 def StochasticOscillator(ticker):
 	df = pdr.DataReader(ticker, 'iex', start='1/1/2018')
 	df['L14'] = df['low'].rolling(window=14).min()
@@ -91,76 +83,6 @@ def Forecast(type = 'market', api='iex', start='4/1/2018', end=None):
 		# plt.show(block=False)
 	writer.save()
 
-def FullAnalysis(ticker, api='iex', span=4):
-	path = "C:/Users/david/oscarl8r/workingtickers.xlsx"
-	tickers = pd.read_excel(path)
-	tickers = tickers['TICKER'].tolist()
-
-	fig, ax = plt.subplots()
-	years = YearLocator()
-	months = MonthLocator()
-	days = DayLocator()
-	yrsformatter = DateFormatter('%Y')
-	mnthsformatter = DateFormatter('%M')
-	dayformatter = DateFormatter('%D')
-
-	if api == 'quandl':
-		open = 'AdjOpen'
-		close = 'AdjClose'
-		high = 'AdjHigh'
-		low = 'AdjLow'
-		volume = 'AdjVolume'
-	if api == 'iex':
-		open = 'open'
-		close = 'close'
-		high = 'high'
-		low = 'low'
-		volume = 'volume'
-
-	# for ticker in tickers:
-	df = pdr.DataReader(ticker, api, start='1/1/2018')
-	df['L14'] = df[low].rolling(window=14).min()
-	df['H14'] = df[high].rolling(window=14).max()
-	df['%K'] = 100*((df[close].iloc[-1] - df['L14']) / (df['H14'] - df['L14']))
-	df['%D'] = df['%K'].rolling(window=3).mean()
-	closing = df[close]
-	delta = closing.diff()
-	delta = delta[1:]
-	up, down = delta.copy(), delta.copy()
-	up[up < 0] = 0
-	down[down > 0] = 0
-	roll_up = up.ewm(span).mean()
-	roll_down = (down.abs()).ewm(span).mean()
-	RS1 = roll_up / roll_down
-	df['RSI'] = 100.0 - (100.0 / (1.0 + RS1))
-	df['70%'] = 70
-	df['30%'] = 30
-	new_df = df[['%K', '%D', close, 'RSI', '30%', '70%']]
-
-	K = df['%K'].values
-	D = df['%D'].values
-	RSI = df['RSI'].values
-	thirty = df['30%'].values
-	seventy = df['70%'].values
-	x_ = df.index.tolist()
-
-	plt.plot(x_, K, label='%K')
-	plt.plot(x_, D, label='%D')
-	plt.plot(x_, RSI, label='RSI')
-	plt.plot(x_, thirty, label='30%')
-	plt.plot(x_, seventy, label='70%')
-	plt.plot(x_, closing, label='Close')
-
-	plt.legend(loc=2)
-	ax.xaxis.set_major_locator(months)
-	ax.xaxis.set_major_formatter(mnthsformatter)
-	ax.xaxis.set_minor_locator(days)
-	ax.axes.set_xticklabels(x_)
-	fig.autofmt_xdate()
-	plt.title(ticker)
-	ax.axes.set_ylim(bottom=0)
-	plt.show()
-
 def average_directional_movement_index(df, n, n_ADX):
 	"""
 	Calculate the Average Directional Movement Index for given data.
@@ -218,6 +140,10 @@ def Screener():
 		df['SMA14'] = df['close'].rolling(window=14).mean()
 		df['SMA50'] = df['close'].rolling(window=50).mean()
 		df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+		df['L14'] = df['low'].rolling(window=14).min()
+		df['H14'] = df['high'].rolling(window=14).max()
+		df['%K'] = 100*((df['close'].iloc[-1] - df['L14']) / (df['H14'] - df['L14']))
+		df['%D'] = df['%K'].rolling(window=3).mean()
 		span = 4
 		closing = df.close
 		delta = closing.diff()
@@ -254,42 +180,17 @@ def Screener():
 			call_list.append(1)
 		else:
 			put_list.append(0)
-		print('\n')
-		print('#######################################################')
-		print('\n')
-		print('Number of Call tests that', ticker, 'passed:', len(call_list))
-		print('Number of Put tests that', ticker, 'passed:', len(put_list))
 
-		if len(call_list) >= 3:
+		if df['%K'].iloc[-1] > df['%D'].iloc[-1]:
+			call_list.append(1)
+		else:
+			put_list.append(0)
+
+		if len(call_list) >= 4:
 			print(ticker, ' is a Call.')
-		if len(put_list) >= 3:
+		if len(put_list) >= 4:
 			print(ticker, 'is a Put')
 
-		print('\n')
-		print('#######################################################')
-		print('\n')
-	# # df.to_excel('StrongTrendList.xlsx')
-	# fromaddr = "jbdtstocks@gmail.com"
-	# toaddr = "jbdtstocks@gmail.com"
-	# msg = MIMEMultipart()
-	# msg['From'] = fromaddr
-	# msg['To'] = toaddr
-	# msg['Subject'] = "Stock Screener"
-	# body = "Daily stock screen"
-	# msg.attach(MIMEText(body, 'plain'))
-	# filename = "StrongTrendList.xlsx"
-	# attachment = open("StrongTrendList.xlsx", "rb")
-	# p = MIMEBase('application', 'octet-stream')
-	# p.set_payload((attachment).read())
-	# encoders.encode_base64(p)
-	# p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
-	# msg.attach(p)
-	# s = smtplib.SMTP('smtp.gmail.com', 587)
-	# s.starttls()
-	# s.login(fromaddr, "Stocker#1")
-	# text = msg.as_string()
-	# s.sendmail(fromaddr, toaddr, text)
-	# s.quit()
 #########################################################################
 # StochasticOscillator('LB')
 # FullAnalysis('LMT')
