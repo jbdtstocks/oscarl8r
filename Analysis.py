@@ -207,13 +207,14 @@ def average_directional_movement_index(df, n, n_ADX):
 
 def Screener():
 	xl = pd.read_excel('top_100_stocks.xlsx')
-	tickers = xl['TICKER'].tolist()
+	# tickers = xl['TICKER'].tolist()
+	tickers = ['AAPL', 'SQ', 'PFE', 'GS', 'V', 'AMZN', 'GOOGL', 'GOOG']
 	tickers = sorted(tickers)
 	for ticker in tickers:
 		try:
 			df = pdr.DataReader(ticker, 'iex', start='1/1/2015')
 			df['SMA14'] = df['close'].rolling(window=14).mean()
-			df['SMA28'] = df['close'].rolling(window=28).mean()
+			df['SMA50'] = df['close'].rolling(window=50).mean()
 			df['SMA100'] = df['close'].rolling(window=100).mean()
 			df['EMA 14'] = df['close'].ewm(span=20, adjust=False).mean()
 			df['EMA 28'] = df['close'].ewm(span=50, adjust=False).mean()
@@ -221,7 +222,7 @@ def Screener():
 			df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
 			df = df.dropna()
 			sma14 = df['SMA14'].tolist()
-			sma28 = df['SMA28'].tolist()
+			sma50 = df['SMA50'].tolist()
 			ema14 = df['EMA 14'].tolist()
 			ema28 = df['EMA 28'].tolist()
 			macd = df['MACD'].tolist()
@@ -235,7 +236,7 @@ def Screener():
 					buy_sell.append('buy')
 				if j > i and j:
 					buy_sell.append('sell')
-			for i,j in zip(sma14, sma28):
+			for i,j in zip(sma14, sma50):
 				if i > j:
 					buy_sell2.append('buy')
 				else:
