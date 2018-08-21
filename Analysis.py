@@ -207,55 +207,67 @@ def average_directional_movement_index(df, n, n_ADX):
 
 def Screener():
 	xl = pd.read_excel('top_100_stocks.xlsx')
-	# tickers = xl['TICKER'].tolist()
-	tickers = ['AAPL', 'SQ', 'PFE', 'GS', 'V', 'AMZN', 'GOOGL', 'GOOG']
-	tickers = sorted(tickers)
+	tickers = xl['TICKER'].tolist()
+	# ticker_input = input("Type ticker symbols separated by one space:")
+	# ticker_list = ticker_input.split()
+	# tickers = [i for i in ticker_list]
+
 	for ticker in tickers:
-		try:
-			df = pdr.DataReader(ticker, 'iex', start='1/1/2015')
-			df['SMA14'] = df['close'].rolling(window=14).mean()
-			df['SMA50'] = df['close'].rolling(window=50).mean()
-			df['SMA100'] = df['close'].rolling(window=100).mean()
-			df['EMA 14'] = df['close'].ewm(span=20, adjust=False).mean()
-			df['EMA 28'] = df['close'].ewm(span=50, adjust=False).mean()
-			df['MACD'] = df['close'].ewm(span=12, adjust=False).mean() - df['close'].ewm(span=26, adjust=False).mean()
-			df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
-			df = df.dropna()
-			sma14 = df['SMA14'].tolist()
-			sma50 = df['SMA50'].tolist()
-			ema14 = df['EMA 14'].tolist()
-			ema28 = df['EMA 28'].tolist()
-			macd = df['MACD'].tolist()
-			signal = df['Signal'].tolist()
-			close = df['close'].tolist()
-			buy_sell = []
-			buy_sell2 = []
-			up_down = []
-			for i,j in zip(close,sma14):
-				if i > j and j:
-					buy_sell.append('buy')
-				if j > i and j:
-					buy_sell.append('sell')
-			for i,j in zip(sma14, sma50):
-				if i > j:
-					buy_sell2.append('buy')
-				else:
-					buy_sell2.append('sell')
-			for i,j in zip(macd, signal):
-				if i > j:
-					up_down.append('UP')
-				if j > i:
-					up_down.append("DOWN")
-			df['Buy/Sell'] = buy_sell
-			df['SMA Buy/Sell'] = buy_sell2
-			df["UP/DOWN"] = up_down
-			if buy_sell2[-1] == 'buy' and up_down[-1] == 'UP':
-				print(ticker, df['close'].iloc[-1], 'CALL')
-			if buy_sell2[-1] == 'sell' and up_down[-1] == 'DOWN':
-				print(ticker, df['close'].iloc[-1], 'PUT')
-			# print(ticker,df.tail())
-		except:
-			pass
+		df = pdr.DataReader(ticker, "iex", start='1/1/2018')
+		df['MACD'] = df['close'].ewm(span=12, adjust=False).mean() - df['close'].ewm(span=26, adjust=False).mean()
+		df['SMA14'] = df['close'].rolling(window=14).mean()
+		df['SMA50'] = df['close'].rolling(window=50).mean()
+		df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+		span = 4
+		closing = df.close
+		delta = closing.diff()
+		delta = delta[1:]
+		up, down = delta.copy(), delta.copy()
+		up[up < 0] = 0
+		down[down > 0] = 0
+		roll_up = up.ewm(span).mean()
+		roll_down = (down.abs()).ewm(span).mean()
+		RS1 = roll_up / roll_down
+		df['RSI'] = 100.0 - (100.0 / (1.0 + RS1))
+		df['70%'] = 70
+		df['30%'] = 30
+
+		call_list = []
+		put_list = []
+
+		if df['SMA14'].iloc[-1] > df['SMA50'].iloc[-1]:
+			call_list.append(1)
+		else:
+			put_list.append(0)
+
+		if df['MACD'].iloc[-1] >= 0:
+			call_list.append(1)
+		else:
+			put_list.append(0)
+
+		if df['MACD'].iloc[-1] > df['Signal'].iloc[-1]:
+			call_list.append(1)
+		else:
+			put_list.append(0)
+
+		if 40 < df['RSI'].iloc[-1] < 60:
+			call_list.append(1)
+		else:
+			put_list.append(0)
+		print('\n')
+		print('#######################################################')
+		print('\n')
+		print('Number of Call tests that', ticker, 'passed:', len(call_list))
+		print('Number of Put tests that', ticker, 'passed:', len(put_list))
+
+		if len(call_list) >= 3:
+			print(ticker, ' is a Call.')
+		if len(put_list) >= 3:
+			print(ticker, 'is a Put')
+
+		print('\n')
+		print('#######################################################')
+		print('\n')
 	# # df.to_excel('StrongTrendList.xlsx')
 	# fromaddr = "jbdtstocks@gmail.com"
 	# toaddr = "jbdtstocks@gmail.com"
