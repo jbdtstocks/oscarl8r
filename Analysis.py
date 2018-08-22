@@ -1,3 +1,4 @@
+################################################################################
 from imports import *
 
 def StochasticOscillator(ticker):
@@ -128,11 +129,18 @@ def average_directional_movement_index(df, n, n_ADX):
 	return df
 
 def Screener():
+	'''
+
+	Functional indicators:
+		- Moving Average Convergence/Divergence (MACD)
+		- 14-day and 50-day Simple Moving Average (SMA)
+		- Relative Strength Index (RSI)
+		- Stochastic Oscillator
+
+	'''
+
 	xl = pd.read_excel('top_100_stocks.xlsx')
 	tickers = xl['TICKER'].tolist()
-	# ticker_input = input("Type ticker symbols separated by one space:")
-	# ticker_list = ticker_input.split()
-	# tickers = [i for i in ticker_list]
 
 	for ticker in tickers:
 		df = pdr.DataReader(ticker, "iex", start='1/1/2018')
@@ -187,13 +195,8 @@ def Screener():
 			put_list.append(0)
 
 		if len(call_list) >= 4:
-			print(ticker, ' is a Call.')
+			print(ticker, ' is a Call')
 		if len(put_list) >= 4:
 			print(ticker, 'is a Put')
 
-#########################################################################
-# StochasticOscillator('LB')
-# FullAnalysis('LMT')
-# Forecast()
-# print(RelativeStrengthIndex('AAPL'))
-Screener()
+################################################################################
